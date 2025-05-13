@@ -1,0 +1,489 @@
+<%- include('./partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/inventory">Инвентарь</a></li>
+        <li class="breadcrumb-item active">Прием товара</li>
+      </ol>
+    </nav>
+    
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0"><i class="fas fa-arrow-down text-success me-2"></i> Прием товара</h5>
+      </div>
+      
+      <div class="card-body">
+        <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">Форма приема товара</h6>
+                
+                <form method="POST" action="/inventory/receive">
+                  <div class="mb-3">
+                    <label for="barcode" class="form-label">Штрих-код товара *</label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" id="barcode" name="barcode" required value="<%= typeof formData !== 'undefined' && formData && formData.barcode ? formData.barcode : '' %>">
+                      <button class="btn btn-outline-primary" type="button" id="scanButton">
+                        <i class="fas fa-barcode me-1"></i> Сканировать
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="quantity" class="form-label">Количество *</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" min="1" required value="<%= typeof formData !== 'undefined' && formData && formData.quantity ? formData.quantity : '1' %>">
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Местоположение</label>
+                    <div class="row g-2">
+                      <div class="col-4">
+                        <div class="input-group">
+                          <span class="input-group-text">Зона</span>
+                          <input type="text" class="form-control" id="zone" name="zone" maxlength="1" value="<%= typeof formData !== 'undefined' && formData && formData.zone ? formData.zone : '' %>" placeholder="A">
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="input-group">
+                          <span class="input-group-text">Стеллаж</span>
+                          <input type="text" class="form-control" id="rack" name="rack" maxlength="2" value="<%= typeof formData !== 'undefined' && formData && formData.rack ? formData.rack : '' %>" placeholder="01">
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="input-group">
+                          <span class="input-group-text">Полка</span>
+                          <input type="text" class="form-control" id="shelf" name="shelf" maxlength="2" value="<%= typeof formData !== 'undefined' && formData && formData.shelf ? formData.shelf : '' %>" placeholder="01">
+                        </div>
+                      </div>
+                    </div>
+                    <div class="form-text">Оставьте пустым, чтобы использовать текущее местоположение</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="reason" class="form-label">Примечание</label>
+                    <input type="text" class="form-control" id="reason" name="reason" value="<%= typeof formData !== 'undefined' && formData && formData.reason ? formData.reason : '' %>" placeholder="Поставка от поставщика...">
+                  </div>
+                  
+                  <div class="d-flex justify-content-between mt-4">
+                    <a href="/inventory" class="btn btn-secondary">
+                      <i class="fas fa-arrow-left me-1"></i> Назад
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                      <i class="fas fa-check me-1"></i> Подтвердить
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="card border shadow-sm h-100">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">Информация о товаре</h6>
+                
+                <div id="productInfo" class="d-none">
+                  <div class="mb-3">
+                    <label class="form-label">Название:</label>
+                    <div class="fw-bold fs-5 product-name">-</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Текущее количество:</label>
+                    <div class="fw-bold fs-5 product-quantity">-</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Текущее местоположение:</label>
+                    <div class="fw-bold fs-5 product-location">-</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Категория:</label>
+                    <div class="product-category">-</div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Цена:</label>
+                    <div class="product-price">-</div>
+                  </div>
+                  
+                  <div class="alert alert-success preview-alert d-none" role="alert">
+                    <h6 class="alert-heading">Предварительный расчет:</h6>
+                    <p class="mb-0">Новое количество: <span class="new-quantity fw-bold">-</span></p>
+                  </div>
+                </div>
+                
+                <div id="productInfoEmpty" class="text-center py-5">
+                  <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                  <h6 class="text-muted">Введите штрих-код товара, чтобы увидеть информацию</h6>
+                </div>
+                
+                <div id="productInfoLoading" class="text-center py-5 d-none">
+                  <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Загрузка...</span>
+                  </div>
+                  <h6 class="text-muted">Поиск товара...</h6>
+                </div>
+                
+                <div id="productInfoNotFound" class="text-center py-5 d-none">
+                  <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                  <h6 class="text-muted">Товар не найден</h6>
+                  <div class="mt-3">
+                    <a href="/inventory/add" class="btn btn-sm btn-primary">
+                      <i class="fas fa-plus me-1"></i> Добавить новый товар
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно для сканирования -->
+<div class="modal fade" id="scanModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-barcode me-2"></i> Сканирование штрих-кода</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label">Видео с камеры</label>
+            <button id="startScanButton" class="btn btn-primary btn-sm">
+              <i class="fas fa-camera me-1"></i> Начать сканирование
+            </button>
+          </div>
+          
+          <div class="scanner-container mb-3 position-relative">
+            <video id="video" class="w-100 rounded border scanner-video"></video>
+            <div id="scanOverlay" class="scan-overlay rounded">
+              <div id="scanLine" class="scan-line"></div>
+            </div>
+            <div id="scanLoading" class="scan-loading d-none">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Загрузка...</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <button id="switchCameraButton" class="btn btn-outline-secondary btn-sm me-2">
+              <i class="fas fa-sync me-1"></i> Переключить камеру
+            </button>
+            <button id="scanFromImageButton" class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-image me-1"></i> Сканировать из изображения
+            </button>
+            <input type="file" id="imageInput" class="d-none" accept="image/*">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Подключение библиотеки QuaggaJS -->
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.2/dist/quagga.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const barcodeInput = document.getElementById('barcode');
+    const quantityInput = document.getElementById('quantity');
+    const productInfo = document.getElementById('productInfo');
+    const productInfoEmpty = document.getElementById('productInfoEmpty');
+    const productInfoLoading = document.getElementById('productInfoLoading');
+    const productInfoNotFound = document.getElementById('productInfoNotFound');
+    const scanButton = document.getElementById('scanButton');
+    const scanModal = new bootstrap.Modal(document.getElementById('scanModal'));
+    
+    // Функция поиска товара по штрих-коду
+    window.fetchProduct = function() {
+      const barcode = barcodeInput.value.trim();
+      
+      if (!barcode) {
+        productInfo.classList.add('d-none');
+        productInfoNotFound.classList.add('d-none');
+        productInfoLoading.classList.add('d-none');
+        productInfoEmpty.classList.remove('d-none');
+        return;
+      }
+      
+      productInfo.classList.add('d-none');
+      productInfoNotFound.classList.add('d-none');
+      productInfoEmpty.classList.add('d-none');
+      productInfoLoading.classList.remove('d-none');
+      
+      // Запрос к API
+      fetch(`/inventory/api/product/${barcode}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Товар не найден');
+          }
+          return response.json();
+        })
+        .then(product => {
+          // Заполнение информации о товаре
+          document.querySelector('.product-name').textContent = product.name;
+          document.querySelector('.product-quantity').textContent = `${product.stockQuantity} шт.`;
+          document.querySelector('.product-location').textContent = `${product.location.zone}-${product.location.rack}-${product.location.shelf}`;
+          document.querySelector('.product-category').textContent = product.category;
+          document.querySelector('.product-price').textContent = `${product.price.toFixed(2)} ₽`;
+          
+          // Заполнение полей местоположения, если они пустые
+          if (!document.getElementById('zone').value) {
+            document.getElementById('zone').value = product.location.zone;
+          }
+          if (!document.getElementById('rack').value) {
+            document.getElementById('rack').value = product.location.rack;
+          }
+          if (!document.getElementById('shelf').value) {
+            document.getElementById('shelf').value = product.location.shelf;
+          }
+          
+          // Отображение предварительного расчета
+          updatePreview(product.stockQuantity);
+          
+          productInfoLoading.classList.add('d-none');
+          productInfoNotFound.classList.add('d-none');
+          productInfo.classList.remove('d-none');
+        })
+        .catch(error => {
+          console.error('Ошибка при поиске товара:', error);
+          
+          // Отображение ошибки
+          productInfoLoading.classList.add('d-none');
+          productInfo.classList.add('d-none');
+          productInfoNotFound.classList.remove('d-none');
+        });
+    }
+    
+    // Обновление предварительного расчета
+    function updatePreview(currentQuantity) {
+      const quantity = parseInt(quantityInput.value) || 0;
+      const newQuantity = currentQuantity + quantity;
+      
+      document.querySelector('.new-quantity').textContent = `${newQuantity} шт.`;
+      document.querySelector('.preview-alert').classList.remove('d-none');
+    }
+    
+    // Обработчики событий
+    barcodeInput.addEventListener('blur', window.fetchProduct);
+    
+    // Если штрих-код уже есть при загрузке страницы, выполняем поиск
+    if (barcodeInput.value.trim()) {
+      window.fetchProduct();
+    }
+    
+    // Обработчик изменения количества
+    quantityInput.addEventListener('input', function() {
+      if (productInfo.classList.contains('d-none')) return;
+      
+      const currentQuantity = parseInt(document.querySelector('.product-quantity').textContent) || 0;
+      updatePreview(currentQuantity);
+    });
+    
+    // Открытие модального окна для сканирования
+    scanButton.addEventListener('click', function() {
+      scanModal.show();
+    });
+    
+    // Инициализация и настройка QuaggaJS
+    let scanner = null;
+    
+    document.getElementById('startScanButton').addEventListener('click', function() {
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.getElementById('video'),
+          constraints: {
+            facingMode: "environment",
+            width: 640,
+            height: 480
+          },
+        },
+        decoder: {
+          readers: [
+            "code_128_reader",
+            "ean_reader",
+            "ean_8_reader",
+            "code_39_reader",
+            "code_39_vin_reader",
+            "codabar_reader",
+            "upc_reader",
+            "upc_e_reader",
+            "i2of5_reader"
+          ]
+        }
+      }, function(err) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        
+        document.getElementById('scanLoading').classList.add('d-none');
+        document.getElementById('scanOverlay').classList.remove('d-none');
+        Quagga.start();
+        
+        scanner = Quagga;
+      });
+      
+      Quagga.onDetected(function(result) {
+        const code = result.codeResult.code;
+        console.log("Баркод обнаружен:", code);
+        
+        // Заполнение поля штрих-кода
+        barcodeInput.value = code;
+        
+        // Остановка сканера
+        if (scanner) {
+          scanner.stop();
+          scanner = null;
+        }
+        
+        // Закрытие модального окна
+        scanModal.hide();
+        
+        // Поиск товара
+        window.fetchProduct();
+      });
+    });
+    
+    // Остановка сканера при закрытии модального окна
+    document.getElementById('scanModal').addEventListener('hidden.bs.modal', function() {
+      if (scanner) {
+        scanner.stop();
+        scanner = null;
+      }
+    });
+    
+    // Переключение камеры
+    document.getElementById('switchCameraButton').addEventListener('click', function() {
+      if (scanner) {
+        scanner.stop();
+        scanner = null;
+      }
+      
+      const currentFacingMode = document.querySelector('#video').getAttribute('data-facing-mode') || 'environment';
+      const newFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+      
+      document.querySelector('#video').setAttribute('data-facing-mode', newFacingMode);
+      
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.getElementById('video'),
+          constraints: {
+            facingMode: newFacingMode,
+            width: 640,
+            height: 480
+          },
+        },
+        decoder: {
+          readers: [
+            "code_128_reader",
+            "ean_reader",
+            "ean_8_reader",
+            "code_39_reader",
+            "code_39_vin_reader",
+            "codabar_reader",
+            "upc_reader",
+            "upc_e_reader",
+            "i2of5_reader"
+          ]
+        }
+      }, function(err) {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        
+        document.getElementById('scanLoading').classList.add('d-none');
+        document.getElementById('scanOverlay').classList.remove('d-none');
+        Quagga.start();
+        
+        scanner = Quagga;
+      });
+    });
+    
+    // Сканирование из изображения
+    document.getElementById('scanFromImageButton').addEventListener('click', function() {
+      document.getElementById('imageInput').click();
+    });
+    
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      if (e.target.files && e.target.files.length > 0) {
+        const file = e.target.files[0];
+        
+        if (scanner) {
+          scanner.stop();
+          scanner = null;
+        }
+        
+        const fileUrl = URL.createObjectURL(file);
+        
+        Quagga.decodeSingle({
+          src: fileUrl,
+          numOfWorkers: 0,
+          inputStream: {
+            size: 800
+          },
+          decoder: {
+            readers: [
+              "code_128_reader",
+              "ean_reader",
+              "ean_8_reader",
+              "code_39_reader",
+              "code_39_vin_reader",
+              "codabar_reader",
+              "upc_reader",
+              "upc_e_reader",
+              "i2of5_reader"
+            ]
+          }
+        }, function(result) {
+          URL.revokeObjectURL(fileUrl);
+          
+          if (result && result.codeResult) {
+            const code = result.codeResult.code;
+            console.log("Баркод обнаружен:", code);
+            
+            // Заполнение поля штрих-кода
+            barcodeInput.value = code;
+            
+            // Закрытие модального окна
+            scanModal.hide();
+            
+            // Поиск товара
+            window.fetchProduct();
+          } else {
+            alert("Штрих-код не обнаружен. Попробуйте другое изображение или сделайте снимок штрих-кода более четко.");
+          }
+        });
+      }
+    });
+  });
+</script>
+
+<%- include('./partials/footer') %>

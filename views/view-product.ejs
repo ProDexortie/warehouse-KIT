@@ -1,0 +1,247 @@
+<%- include('./partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/inventory">Инвентарь</a></li>
+        <li class="breadcrumb-item active"><%= product.name %></li>
+      </ol>
+    </nav>
+    
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <h5 class="mb-0 d-flex align-items-center">
+              <i class="fas fa-box text-primary me-2"></i> 
+              <%= product.name %>
+              <span class="badge bg-<%= product.stockQuantity <= product.minStockLevel ? 'danger' : 'success' %> ms-2">
+                <%= product.stockQuantity %> шт.
+              </span>
+            </h5>
+          </div>
+          <div class="col-md-4 text-md-end">
+            <% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
+              <a href="/inventory/edit/<%= product._id %>" class="btn btn-primary me-2">
+                <i class="fas fa-edit me-1"></i> Редактировать
+              </a>
+            <% } %>
+            <div class="btn-group">
+              <a href="/inventory/receive?barcode=<%= product.barcode %>" class="btn btn-success">
+                <i class="fas fa-arrow-down me-1"></i> Прием
+              </a>
+              <a href="/inventory/ship?barcode=<%= product.barcode %>" class="btn btn-danger">
+                <i class="fas fa-arrow-up me-1"></i> Отгрузка
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">Основная информация</h6>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Штрих-код:</div>
+                  <div class="d-flex align-items-center">
+                    <span class="badge bg-light text-dark border me-2"><%= product.barcode %></span>
+                    <svg id="productBarcode" class="barcode"></svg>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Категория:</div>
+                  <div><span class="badge bg-primary"><%= product.category %></span></div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Описание:</div>
+                  <div><%= product.description || 'Нет описания' %></div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Поставщик:</div>
+                  <div><%= product.supplier || 'Не указан' %></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">Запасы и расположение</h6>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Текущее количество:</div>
+                  <div class="fs-4 fw-bold text-<%= product.stockQuantity <= product.minStockLevel ? 'danger' : 'success' %>">
+                    <%= product.stockQuantity %> шт.
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Минимальный запас:</div>
+                  <div><%= product.minStockLevel %> шт.</div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Статус запасов:</div>
+                  <div>
+                    <% if (product.stockQuantity === 0) { %>
+                      <span class="badge bg-danger">Нет в наличии</span>
+                    <% } else if (product.stockQuantity <= product.minStockLevel) { %>
+                      <span class="badge bg-warning text-dark">Низкий запас</span>
+                    <% } else if (product.stockQuantity > product.minStockLevel * 2) { %>
+                      <span class="badge bg-success">Достаточный запас</span>
+                    <% } else { %>
+                      <span class="badge bg-info text-white">Нормальный запас</span>
+                    <% } %>
+                  </div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Местоположение:</div>
+                  <div class="fs-5">
+                    <span class="badge bg-secondary">
+                      Зона: <%= product.location.zone %>, 
+                      Стеллаж: <%= product.location.rack %>, 
+                      Полка: <%= product.location.shelf %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">Финансовая информация</h6>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Цена продажи:</div>
+                  <div class="fs-4 fw-bold"><%= product.price.toFixed(2) %> ₽</div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Себестоимость:</div>
+                  <div><%= product.cost.toFixed(2) %> ₽</div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Прибыль:</div>
+                  <div class="text-success"><%= (product.price - product.cost).toFixed(2) %> ₽</div>
+                </div>
+                
+                <div class="mb-3">
+                  <div class="text-muted small">Общая стоимость запасов:</div>
+                  <div class="fs-5 fw-bold"><%= (product.price * product.stockQuantity).toFixed(2) %> ₽</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-light">
+                <h6 class="card-title mb-0">История операций</h6>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Дата</th>
+                        <th>Тип</th>
+                        <th>Документ</th>
+                        <th>Количество</th>
+                        <th>Местоположение</th>
+                        <th>Примечание</th>
+                        <th>Выполнил</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (transactions.length === 0) { %>
+                        <tr>
+                          <td colspan="7" class="text-center py-3 text-muted">История операций пуста</td>
+                        </tr>
+                      <% } else { %>
+                        <% transactions.forEach(transaction => { %>
+                          <tr>
+                            <td><%= new Date(transaction.timestamp).toLocaleString('ru-RU') %></td>
+                            <td>
+                              <% if (transaction.type === 'in') { %>
+                                <span class="badge bg-success">Приход</span>
+                              <% } else if (transaction.type === 'out') { %>
+                                <span class="badge bg-danger">Расход</span>
+                              <% } else if (transaction.type === 'move') { %>
+                                <span class="badge bg-info text-white">Перемещение</span>
+                              <% } else if (transaction.type === 'adjustment') { %>
+                                <span class="badge bg-warning text-dark">Корректировка</span>
+                              <% } %>
+                            </td>
+                            <td><%= transaction.documentNumber %></td>
+                            <td>
+                              <% if (transaction.type === 'in' || transaction.type === 'adjustment' && transaction.quantity > 0) { %>
+                                <span class="text-success">+<%= transaction.quantity %></span>
+                              <% } else if (transaction.type === 'out' || transaction.type === 'adjustment' && transaction.quantity < 0) { %>
+                                <span class="text-danger">-<%= Math.abs(transaction.quantity) %></span>
+                              <% } else { %>
+                                <%= transaction.quantity %>
+                              <% } %>
+                            </td>
+                            <td>
+                              <% if (transaction.type === 'in') { %>
+                                <i class="fas fa-arrow-right text-success me-1"></i>
+                                <%= transaction.toLocation ? `${transaction.toLocation.zone}-${transaction.toLocation.rack}-${transaction.toLocation.shelf}` : '-' %>
+                              <% } else if (transaction.type === 'out') { %>
+                                <i class="fas fa-arrow-left text-danger me-1"></i>
+                                <%= transaction.fromLocation ? `${transaction.fromLocation.zone}-${transaction.fromLocation.rack}-${transaction.fromLocation.shelf}` : '-' %>
+                              <% } else if (transaction.type === 'move') { %>
+                                <%= transaction.fromLocation ? `${transaction.fromLocation.zone}-${transaction.fromLocation.rack}-${transaction.fromLocation.shelf}` : '-' %>
+                                <i class="fas fa-arrow-right mx-1"></i>
+                                <%= transaction.toLocation ? `${transaction.toLocation.zone}-${transaction.toLocation.rack}-${transaction.toLocation.shelf}` : '-' %>
+                              <% } else { %>
+                                -
+                              <% } %>
+                            </td>
+                            <td><%= transaction.reason || '-' %></td>
+                            <td><%= transaction.performedBy ? transaction.performedBy.fullName : '-' %></td>
+                          </tr>
+                        <% }); %>
+                      <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Библиотека JsBarcode для отображения штрих-кода -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+  // Генерация штрих-кода
+  document.addEventListener('DOMContentLoaded', function() {
+    JsBarcode("#productBarcode", "<%= product.barcode %>", {
+      format: "CODE128",
+      width: 1.5,
+      height: 40,
+      displayValue: false
+    });
+  });
+</script>
+
+<%- include('./partials/footer') %>

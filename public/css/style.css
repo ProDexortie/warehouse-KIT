@@ -1,0 +1,290 @@
+/* Основные стили для системы управления складом */
+
+:root {
+  --primary-color: #3f6ad8;
+  --secondary-color: #6c757d;
+  --success-color: #3ac47d;
+  --info-color: #16aaff;
+  --warning-color: #f7b924;
+  --danger-color: #d92550;
+  --light-color: #f5f5f5;
+  --dark-color: #343a40;
+  --body-bg: #f9f9f9;
+  --card-bg: #ffffff;
+}
+
+body {
+  background-color: var(--body-bg);
+  font-family: 'Roboto', 'Segoe UI', sans-serif;
+  color: #495057;
+  padding-bottom: 70px;
+}
+
+/* Общие стили компонентов */
+.card {
+  border-radius: 0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card-header {
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+}
+
+.btn {
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: #315bbf;
+  border-color: #315bbf;
+}
+
+.navbar {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-dark .navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+  color: #ffffff;
+}
+
+.breadcrumb {
+  background-color: transparent;
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ">";
+}
+
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+  border-radius: 0.25rem;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(63, 106, 216, 0.05);
+}
+
+/* Стилизация форм */
+.form-control, .form-select {
+  border-radius: 0.25rem;
+  border: 1px solid #ced4da;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(63, 106, 216, 0.25);
+}
+
+.input-group-text {
+  background-color: #f4f7fa;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+}
+
+/* Стили для видео на странице сканирования */
+.scanner-video {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  background-color: #000;
+  display: block;
+}
+
+/* Улучшенные стили для контейнера сканера */
+.scanner-container {
+  max-width: 100%;
+  overflow: hidden;
+  background-color: #000;
+  position: relative;
+  aspect-ratio: 4/3;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+}
+
+.scan-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid rgba(63, 106, 216, 0.5);
+  pointer-events: none;
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background-color: rgba(63, 106, 216, 0.7);
+  animation: scan-line 2s linear infinite;
+}
+
+.scan-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 0.25rem;
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100px);
+  }
+  50% {
+    transform: translateY(100px);
+  }
+  100% {
+    transform: translateY(-100px);
+  }
+}
+
+/* Адаптивные стили */
+@media (max-width: 767.98px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .table-responsive {
+    border-radius: 0.5rem;
+  }
+}
+
+/* Анимации и переходы */
+.fade-in {
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Стили для входной страницы */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f7fa;
+}
+
+.login-card {
+  max-width: 400px;
+  width: 100%;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.login-card .card-header {
+  background-color: var(--primary-color);
+  color: white;
+  border-top-left-radius: 0.5rem !important;
+  border-top-right-radius: 0.5rem !important;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+/* Стили 404 и ошибок */
+.error-container {
+  text-align: center;
+  padding: 3rem 0;
+}
+
+.error-code {
+  font-size: 6rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.error-message {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Иконки состояний */
+.status-icon {
+  font-size: 1.25rem;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.status-icon-success {
+  background-color: rgba(58, 196, 125, 0.1);
+  color: var(--success-color);
+}
+
+.status-icon-warning {
+  background-color: rgba(247, 185, 36, 0.1);
+  color: var(--warning-color);
+}
+
+.status-icon-danger {
+  background-color: rgba(217, 37, 80, 0.1);
+  color: var(--danger-color);
+}
+
+.status-icon-info {
+  background-color: rgba(22, 170, 255, 0.1);
+  color: var(--info-color);
+}
+
+/* Стили для печати */
+@media print {
+  body {
+    background-color: white;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .navbar, .breadcrumb, .footer, .btn, form {
+    display: none !important;
+  }
+  
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ddd;
+  }
+  
+  .card-header {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+  }
+  
+  .container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+}

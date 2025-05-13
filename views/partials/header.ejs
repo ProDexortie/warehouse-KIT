@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <% if (isAuthenticated) { %>
+      <!-- Навигационная панель для авторизованных пользователей -->
+      <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+          <a class="navbar-brand" href="/">
+            <i class="fas fa-warehouse me-2"></i>
+            Система управления складом
+          </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="/"><i class="fas fa-home me-1"></i> Главная</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/inventory"><i class="fas fa-boxes me-1"></i> Инвентарь</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="operationsDropdown" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-exchange-alt me-1"></i> Операции
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/inventory/scan"><i class="fas fa-barcode me-1"></i> Сканирование</a></li>
+                  <li><a class="dropdown-item" href="/inventory/receive"><i class="fas fa-arrow-down me-1"></i> Прием товара</a></li>
+                  <li><a class="dropdown-item" href="/inventory/ship"><i class="fas fa-arrow-up me-1"></i> Отгрузка товара</a></li>
+                  <% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/inventory/add"><i class="fas fa-plus me-1"></i> Добавить товар</a></li>
+                  <% } %>
+                </ul>
+              </li>
+              <% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-chart-bar me-1"></i> Отчеты
+                  </a>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="/reports"><i class="fas fa-tachometer-alt me-1"></i> Общая статистика</a></li>
+                    <li><a class="dropdown-item" href="/reports/products"><i class="fas fa-box me-1"></i> Отчет по товарам</a></li>
+                    <li><a class="dropdown-item" href="/reports/transactions"><i class="fas fa-exchange-alt me-1"></i> Отчет по транзакциям</a></li>
+                  </ul>
+                </li>
+              <% } %>
+              <% if (user && user.role === 'admin') { %>
+                <li class="nav-item">
+                  <a class="nav-link" href="/users"><i class="fas fa-users me-1"></i> Пользователи</a>
+                </li>
+              <% } %>
+            </ul>
+            
+            <ul class="navbar-nav">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-user-circle me-1"></i> <%= user.fullName %>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-1"></i> Профиль</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-1"></i> Выход</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    <% } %>
+  </header>
+  
+  <main class="container my-4">
+    <% if (isAuthenticated && typeof success !== 'undefined' && success) { %>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <%= success %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
+    
+    <% if (isAuthenticated && typeof error !== 'undefined' && error) { %>
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <%= error %>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <% } %>
