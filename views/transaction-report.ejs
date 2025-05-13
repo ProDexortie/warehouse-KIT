@@ -1,0 +1,313 @@
+<%- include('./partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/reports">Отчеты</a></li>
+        <li class="breadcrumb-item active">Отчет по транзакциям</li>
+      </ol>
+    </nav>
+    
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-exchange-alt text-primary me-2"></i> Отчет по транзакциям</h5>
+          <a href="/reports/export/transactions<%= queryString %>" class="btn btn-success">
+            <i class="fas fa-file-csv me-1"></i> Экспорт CSV
+          </a>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <form method="GET" action="/reports/transactions" class="row g-2">
+              <div class="col-md-3">
+                <label for="startDate" class="form-label">Дата начала</label>
+                <input type="date" class="form-control" id="startDate" name="startDate" value="<%= startDate %>">
+              </div>
+              
+              <div class="col-md-3">
+                <label for="endDate" class="form-label">Дата окончания</label>
+                <input type="date" class="form-control" id="endDate" name="endDate" value="<%= endDate %>">
+              </div>
+              
+              <div class="col-md-2">
+                <label for="type" class="form-label">Тип операции</label>
+                <select class="form-select" id="type" name="type">
+                  <option value="all" <%= type === 'all' ? 'selected' : '' %>>Все</option>
+                  <option value="in" <%= type === 'in' ? 'selected' : '' %>>Приход</option>
+                  <option value="out" <%= type === 'out' ? 'selected' : '' %>>Расход</option>
+                  <option value="move" <%= type === 'move' ? 'selected' : '' %>>Перемещение</option>
+                  <option value="adjustment" <%= type === 'adjustment' ? 'selected' : '' %>>Корректировка</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <label for="search" class="form-label">Поиск по штрих-коду</label>
+                <input type="text" class="form-control" id="search" name="search" value="<%= search %>" placeholder="Штрих-код...">
+              </div>
+              
+              <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fas fa-filter"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <% if (transactions.length === 0) { %>
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Транзакции не найдены. Попробуйте изменить параметры фильтрации.
+          </div>
+        <% } else { %>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Дата/Время</th>
+                  <th>Документ</th>
+                  <th>Тип</th>
+                  <th>Штрих-код</th>
+                  <th>Товар</th>
+                  <th>Количество</th>
+                  <th>Местоположение</th>
+                  <th>Причина</th>
+                  <th>Пользователь</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% transactions.forEach(transaction => { %>
+                  <tr>
+                    <td><%= new Date(transaction.timestamp).toLocaleString('ru-RU') %></td>
+                    <td><span class="badge bg-light text-dark border"><%= transaction.documentNumber %></span></td>
+                    <td>
+                      <% if (transaction.type === 'in') { %>
+                        <span class="badge bg-success">Приход</span>
+                      <% } else if (transaction.type === 'out') { %>
+                        <span class="badge bg-danger">Расход</span>
+                      <% } else if (transaction.type === 'move') { %>
+                        <span class="badge bg-info text-white">Перемещение</span>
+                      <% } else if (transaction.type === 'adjustment') { %>
+                        <span class="badge bg-warning text-dark">Корректировка</span>
+                      <% } %>
+                    </td>
+                    <td><%= transaction.barcode %></td>
+                    <td>
+                      <% if (transaction.product) { %>
+                        <a href="/inventory/view/<%= transaction.product._id %>" class="text-decoration-none text-dark">
+                          <%= transaction.product.name %>
+                        </a>
+                      <% } else { %>
+                        <span class="text-muted">Неизвестный товар</span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (transaction.type === 'in' || transaction.type === 'adjustment' && transaction.quantity > 0) { %>
+                        <span class="text-success">+<%= transaction.quantity %></span>
+                      <% } else if (transaction.type === 'out' || transaction.type === 'adjustment' && transaction.quantity < 0) { %>
+                        <span class="text-danger">-<%= Math.abs(transaction.quantity) %></span>
+                      <% } else { %>
+                        <%= transaction.quantity %>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (transaction.type === 'in') { %>
+                        <i class="fas fa-arrow-right text-success me-1"></i>
+                        <%= transaction.toLocation ? `${transaction.toLocation.zone}-${transaction.toLocation.rack}-${transaction.toLocation.shelf}` : '-' %>
+                      <% } else if (transaction.type === 'out') { %>
+                        <i class="fas fa-arrow-left text-danger me-1"></i>
+                        <%= transaction.fromLocation ? `${transaction.fromLocation.zone}-${transaction.fromLocation.rack}-${transaction.fromLocation.shelf}` : '-' %>
+                      <% } else if (transaction.type === 'move') { %>
+                        <%= transaction.fromLocation ? `${transaction.fromLocation.zone}-${transaction.fromLocation.rack}-${transaction.fromLocation.shelf}` : '-' %>
+                        <i class="fas fa-arrow-right mx-1"></i>
+                        <%= transaction.toLocation ? `${transaction.toLocation.zone}-${transaction.toLocation.rack}-${transaction.toLocation.shelf}` : '-' %>
+                      <% } else { %>
+                        -
+                      <% } %>
+                    </td>
+                    <td><%= transaction.reason || '-' %></td>
+                    <td><%= transaction.performedBy ? transaction.performedBy.fullName : '-' %></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="mt-4">
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-light py-3">
+                <h6 class="mb-0">Статистика</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-8">
+                    <canvas id="transactionsChart" height="300"></canvas>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="list-group mt-3">
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <i class="fas fa-arrow-down text-success me-2"></i>
+                          Приход товаров
+                        </div>
+                        <span class="badge bg-success rounded-pill">
+                          <%= transactions.filter(t => t.type === 'in').length %>
+                        </span>
+                      </div>
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <i class="fas fa-arrow-up text-danger me-2"></i>
+                          Расход товаров
+                        </div>
+                        <span class="badge bg-danger rounded-pill">
+                          <%= transactions.filter(t => t.type === 'out').length %>
+                        </span>
+                      </div>
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <i class="fas fa-exchange-alt text-info me-2"></i>
+                          Перемещение товаров
+                        </div>
+                        <span class="badge bg-info rounded-pill">
+                          <%= transactions.filter(t => t.type === 'move').length %>
+                        </span>
+                      </div>
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <i class="fas fa-sync text-warning me-2"></i>
+                          Корректировки
+                        </div>
+                        <span class="badge bg-warning rounded-pill">
+                          <%= transactions.filter(t => t.type === 'adjustment').length %>
+                        </span>
+                      </div>
+                      <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                          <i class="fas fa-calculator text-primary me-2"></i>
+                          Всего транзакций
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                          <%= transactions.length %>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    <% if (transactions.length > 0) { %>
+      // Подготовка данных для графика
+      const transactions = <%= JSON.stringify(transactions) %>;
+      
+      // Группировка транзакций по датам
+      const dateMap = new Map();
+      
+      transactions.forEach(transaction => {
+        const date = new Date(transaction.timestamp).toLocaleDateString('ru-RU');
+        
+        if (!dateMap.has(date)) {
+          dateMap.set(date, {
+            in: 0,
+            out: 0,
+            move: 0,
+            adjustment: 0
+          });
+        }
+        
+        dateMap.get(date)[transaction.type]++;
+      });
+      
+      // Сортировка дат
+      const sortedDates = Array.from(dateMap.keys()).sort((a, b) => {
+        const partsA = a.split('.').reverse().join('-');
+        const partsB = b.split('.').reverse().join('-');
+        return new Date(partsA) - new Date(partsB);
+      });
+      
+      // Данные для графика
+      const labels = sortedDates;
+      const inData = sortedDates.map(date => dateMap.get(date).in);
+      const outData = sortedDates.map(date => dateMap.get(date).out);
+      const moveData = sortedDates.map(date => dateMap.get(date).move);
+      const adjustmentData = sortedDates.map(date => dateMap.get(date).adjustment);
+      
+      // Создание графика
+      const ctx = document.getElementById('transactionsChart').getContext('2d');
+      
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Приход',
+              data: inData,
+              backgroundColor: 'rgba(40, 167, 69, 0.7)',
+              borderColor: 'rgba(40, 167, 69, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Расход',
+              data: outData,
+              backgroundColor: 'rgba(220, 53, 69, 0.7)',
+              borderColor: 'rgba(220, 53, 69, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Перемещение',
+              data: moveData,
+              backgroundColor: 'rgba(23, 162, 184, 0.7)',
+              borderColor: 'rgba(23, 162, 184, 1)',
+              borderWidth: 1
+            },
+            {
+              label: 'Корректировка',
+              data: adjustmentData,
+              backgroundColor: 'rgba(255, 193, 7, 0.7)',
+              borderColor: 'rgba(255, 193, 7, 1)',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            title: {
+              display: true,
+              text: 'Количество операций по датам'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            }
+          }
+        }
+      });
+    <% } %>
+  });
+</script>
+
+<%- include('./partials/footer') %>

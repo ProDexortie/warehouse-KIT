@@ -1,0 +1,325 @@
+<%- include('./partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item active">Отчеты</li>
+      </ol>
+    </nav>
+    
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i> Общая статистика склада</h5>
+      </div>
+      
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body p-4 d-flex flex-column align-items-center text-center">
+                <div class="mb-3 p-3 rounded-circle bg-primary bg-opacity-10">
+                  <i class="fas fa-boxes fa-2x text-primary"></i>
+                </div>
+                <h5>Всего товаров</h5>
+                <h3 class="fw-bold"><%= totalProducts %></h3>
+                <div class="text-muted small">наименований в системе</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body p-4 d-flex flex-column align-items-center text-center">
+                <div class="mb-3 p-3 rounded-circle bg-success bg-opacity-10">
+                  <i class="fas fa-ruble-sign fa-2x text-success"></i>
+                </div>
+                <h5>Общая стоимость</h5>
+                <h3 class="fw-bold"><%= totalValue.toLocaleString('ru-RU') %> ₽</h3>
+                <div class="text-muted small">по ценам продажи</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body p-4 d-flex flex-column align-items-center text-center">
+                <div class="mb-3 p-3 rounded-circle bg-info bg-opacity-10">
+                  <i class="fas fa-exchange-alt fa-2x text-info"></i>
+                </div>
+                <h5>Операции за 30 дней</h5>
+                <h3 class="fw-bold"><%= inTransactions + outTransactions + moveTransactions + adjustmentTransactions %></h3>
+                <div class="text-muted small">всего транзакций</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body p-4 d-flex flex-column align-items-center text-center">
+                <div class="mb-3 p-3 rounded-circle bg-warning bg-opacity-10">
+                  <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                </div>
+                <h5>Низкий запас</h5>
+                <h3 class="fw-bold"><%= lowStockProducts.length %></h3>
+                <div class="text-muted small">товаров требуют внимания</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <div class="card border-0 shadow-sm">
+              <div class="card-header bg-light py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Операции за последние 30 дней</h6>
+                  <a href="/reports/transactions" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i> Подробный отчет
+                  </a>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-8">
+                    <canvas id="transactionsChart" height="300"></canvas>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="list-group">
+                      <div class="list-group-item border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                            <i class="fas fa-arrow-down text-success me-2"></i>
+                            Приход товаров
+                          </div>
+                          <span class="badge bg-success rounded-pill"><%= inTransactions %></span>
+                        </div>
+                      </div>
+                      <div class="list-group-item border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                            <i class="fas fa-arrow-up text-danger me-2"></i>
+                            Отгрузка товаров
+                          </div>
+                          <span class="badge bg-danger rounded-pill"><%= outTransactions %></span>
+                        </div>
+                      </div>
+                      <div class="list-group-item border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                            <i class="fas fa-exchange-alt text-info me-2"></i>
+                            Перемещение товаров
+                          </div>
+                          <span class="badge bg-info rounded-pill"><%= moveTransactions %></span>
+                        </div>
+                      </div>
+                      <div class="list-group-item border-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <div>
+                            <i class="fas fa-sync text-warning me-2"></i>
+                            Корректировки
+                          </div>
+                          <span class="badge bg-warning rounded-pill"><%= adjustmentTransactions %></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-light py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Товары с низким уровнем запасов</h6>
+                  <a href="/reports/products?stockStatus=low" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i> Подробнее
+                  </a>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Наименование</th>
+                        <th>Текущее</th>
+                        <th>Минимум</th>
+                        <th>Действия</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (lowStockProducts.length === 0) { %>
+                        <tr>
+                          <td colspan="4" class="text-center py-3 text-muted">Нет товаров с низким уровнем запасов</td>
+                        </tr>
+                      <% } else { %>
+                        <% lowStockProducts.slice(0, 5).forEach(product => { %>
+                          <tr>
+                            <td>
+                              <a href="/inventory/view/<%= product._id %>" class="text-decoration-none text-dark">
+                                <%= product.name %>
+                              </a>
+                            </td>
+                            <td>
+                              <span class="badge bg-<%= product.stockQuantity === 0 ? 'danger' : 'warning text-dark' %>">
+                                <%= product.stockQuantity %>
+                              </span>
+                            </td>
+                            <td><%= product.minStockLevel %></td>
+                            <td>
+                              <a href="/inventory/receive?barcode=<%= product.barcode %>" class="btn btn-sm btn-success me-1">
+                                <i class="fas fa-plus"></i>
+                              </a>
+                              <a href="/inventory/view/<%= product._id %>" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i>
+                              </a>
+                            </td>
+                          </tr>
+                        <% }); %>
+                      <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-header bg-light py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">Товары с нулевым запасом</h6>
+                  <a href="/reports/products?stockStatus=out" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i> Подробнее
+                  </a>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Наименование</th>
+                        <th>Категория</th>
+                        <th>Минимум</th>
+                        <th>Действия</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (outOfStockProducts.length === 0) { %>
+                        <tr>
+                          <td colspan="4" class="text-center py-3 text-muted">Нет товаров с нулевым запасом</td>
+                        </tr>
+                      <% } else { %>
+                        <% outOfStockProducts.slice(0, 5).forEach(product => { %>
+                          <tr>
+                            <td>
+                              <a href="/inventory/view/<%= product._id %>" class="text-decoration-none text-dark">
+                                <%= product.name %>
+                              </a>
+                            </td>
+                            <td>
+                              <span class="badge bg-primary"><%= product.category %></span>
+                            </td>
+                            <td><%= product.minStockLevel %></td>
+                            <td>
+                              <a href="/inventory/receive?barcode=<%= product.barcode %>" class="btn btn-sm btn-success me-1">
+                                <i class="fas fa-plus"></i>
+                              </a>
+                              <a href="/inventory/view/<%= product._id %>" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i>
+                              </a>
+                            </td>
+                          </tr>
+                        <% }); %>
+                      <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Данные для графика операций
+    const ctx = document.getElementById('transactionsChart').getContext('2d');
+    
+    // Демонстрационные данные за 30 дней
+    const labels = [];
+    const now = new Date();
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      labels.push(date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }));
+    }
+    
+    // Случайные данные для демонстрации
+    const inData = Array.from({ length: 30 }, () => Math.floor(Math.random() * 5));
+    const outData = Array.from({ length: 30 }, () => Math.floor(Math.random() * 4));
+    
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Приход',
+            data: inData,
+            backgroundColor: 'rgba(40, 167, 69, 0.2)',
+            borderColor: 'rgba(40, 167, 69, 1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 3
+          },
+          {
+            label: 'Расход',
+            data: outData,
+            backgroundColor: 'rgba(220, 53, 69, 0.2)',
+            borderColor: 'rgba(220, 53, 69, 1)',
+            borderWidth: 2,
+            tension: 0.3,
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Движение товаров за последние 30 дней'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<%- include('./partials/footer') %>

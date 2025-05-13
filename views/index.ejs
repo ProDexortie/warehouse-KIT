@@ -1,0 +1,315 @@
+<%- include('./partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+        <div class="row">
+          <div class="col-md-8">
+            <h2 class="fw-bold text-primary">Добро пожаловать, <%= user.fullName %></h2>
+            <p class="lead text-muted">Система управления складом с использованием штрих-кодирования</p>
+            <hr>
+            <p>Выберите операцию для начала работы:</p>
+            
+            <div class="row mt-4">
+              <div class="col-md-6 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-barcode me-2"></i> Сканирование</h5>
+                    <p class="card-text">Сканируйте штрих-код для поиска товара или выполнения операций.</p>
+                    <a href="/inventory/scan" class="btn btn-primary">
+                      <i class="fas fa-qrcode me-1"></i> Сканировать
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-boxes me-2"></i> Инвентарь</h5>
+                    <p class="card-text">Просмотр, поиск и управление товарами на складе.</p>
+                    <a href="/inventory" class="btn btn-primary">
+                      <i class="fas fa-search me-1"></i> Открыть инвентарь
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-arrow-down me-2"></i> Прием товара</h5>
+                    <p class="card-text">Добавление товаров на склад с учетом количества и расположения.</p>
+                    <a href="/inventory/receive" class="btn btn-primary">
+                      <i class="fas fa-plus me-1"></i> Принять товар
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-arrow-up me-2"></i> Отгрузка товара</h5>
+                    <p class="card-text">Отгрузка товаров со склада с обновлением количества в системе.</p>
+                    <a href="/inventory/ship" class="btn btn-primary">
+                      <i class="fas fa-minus me-1"></i> Отгрузить товар
+                    </a>
+                  </div>
+                </div>
+              </div>
+              
+              <% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
+                <div class="col-md-6 mb-3">
+                  <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                      <h5 class="card-title text-primary"><i class="fas fa-chart-bar me-2"></i> Отчеты</h5>
+                      <p class="card-text">Статистика и аналитика по данным склада.</p>
+                      <a href="/reports" class="btn btn-primary">
+                        <i class="fas fa-chart-line me-1"></i> Просмотр отчетов
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                  <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                      <h5 class="card-title text-primary"><i class="fas fa-plus me-2"></i> Добавить товар</h5>
+                      <p class="card-text">Добавление нового товара в систему с указанием всех параметров.</p>
+                      <a href="/inventory/add" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-1"></i> Добавить товар
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+          
+          <div class="col-md-4 d-flex align-items-center justify-content-center">
+            <div class="text-center">
+              <img src="https://cdn.dribbble.com/users/2346090/screenshots/6517285/scannerscanner.gif" alt="Сканирование" class="img-fluid rounded" style="max-width: 100%;">
+              <div class="bg-light p-3 rounded mt-3">
+                <h6 class="mb-2 text-primary">Сканирование штрих-кодов</h6>
+                <p class="small text-muted mb-0">Используйте камеру вашего устройства для сканирования штрих-кодов и быстрого доступа к информации о товарах.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle text-warning me-2"></i> Товары с низким уровнем запасов</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Название</th>
+                  <th>Остаток</th>
+                  <th>Мин. запас</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="lowStockTable">
+                <tr class="text-center">
+                  <td colspan="4" class="py-3">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="text-muted mt-2">Загрузка данных...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-light">
+          <a href="/reports/products?stockStatus=low" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-external-link-alt me-1"></i> Подробный отчет
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="card-title mb-0"><i class="fas fa-chart-line text-success me-2"></i> Последние операции</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Дата</th>
+                  <th>Тип</th>
+                  <th>Товар</th>
+                  <th>Кол-во</th>
+                </tr>
+              </thead>
+              <tbody id="recentTransactionsTable">
+                <tr class="text-center">
+                  <td colspan="4" class="py-3">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Загрузка...</span>
+                    </div>
+                    <p class="text-muted mt-2">Загрузка данных...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-light">
+          <a href="/reports/transactions" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-external-link-alt me-1"></i> Все операции
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<script>
+// Загрузка данных о товарах с низким уровнем запасов
+function loadLowStockProducts() {
+  const lowStockTable = document.getElementById('lowStockTable');
+  
+  // Показываем сообщение о загрузке
+  lowStockTable.innerHTML = `
+    <tr>
+      <td colspan="4" class="text-center py-3">
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+          </div>
+          <span class="text-muted">Загрузка данных...</span>
+        </div>
+      </td>
+    </tr>
+  `;
+  
+  // Загрузка данных через API
+  fetch('/inventory/api/products/low-stock')
+    .then(response => response.json())
+    .then(data => {
+      if (data.length === 0) {
+        lowStockTable.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">Нет товаров с низким уровнем запасов</td></tr>';
+        return;
+      }
+      
+      lowStockTable.innerHTML = '';
+      
+      data.forEach(item => {
+        lowStockTable.innerHTML += `
+          <tr>
+            <td>${item.name}</td>
+            <td class="text-danger fw-bold">${item.stockQuantity}</td>
+            <td>${item.minStockLevel}</td>
+            <td>
+              <a href="/inventory/view/${item._id}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-eye"></i>
+              </a>
+            </td>
+          </tr>
+        `;
+      });
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке товаров с низким уровнем запасов:', error);
+      lowStockTable.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-3 text-danger">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Ошибка при загрузке данных
+          </td>
+        </tr>
+      `;
+    });
+}
+
+// Загрузка данных о последних операциях
+function loadRecentTransactions() {
+  const recentTransactionsTable = document.getElementById('recentTransactionsTable');
+  
+  // Показываем сообщение о загрузке
+  recentTransactionsTable.innerHTML = `
+    <tr>
+      <td colspan="4" class="text-center py-3">
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+            <span class="visually-hidden">Загрузка...</span>
+          </div>
+          <span class="text-muted">Загрузка данных...</span>
+        </div>
+      </td>
+    </tr>
+  `;
+  
+  // Загрузка данных через API
+  fetch('/reports/api/transactions/recent')
+    .then(response => response.json())
+    .then(data => {
+      if (data.length === 0) {
+        recentTransactionsTable.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">Нет недавних операций</td></tr>';
+        return;
+      }
+      
+      recentTransactionsTable.innerHTML = '';
+      
+      const typeIcons = {
+        'in': '<i class="fas fa-arrow-down text-success"></i>',
+        'out': '<i class="fas fa-arrow-up text-danger"></i>',
+        'move': '<i class="fas fa-exchange-alt text-info"></i>',
+        'adjustment': '<i class="fas fa-sync text-warning"></i>'
+      };
+      
+      data.forEach(item => {
+        const date = new Date(item.timestamp).toLocaleDateString('ru-RU');
+        
+        recentTransactionsTable.innerHTML += `
+          <tr>
+            <td>${date}</td>
+            <td>${typeIcons[item.type]} ${item.type === 'in' ? 'Приход' : 
+                                          item.type === 'out' ? 'Расход' : 
+                                          item.type === 'move' ? 'Перемещение' : 'Корректировка'}</td>
+            <td>${item.productName || 'Неизвестный товар'}</td>
+            <td>${item.quantity}</td>
+          </tr>
+        `;
+      });
+    })
+    .catch(error => {
+      console.error('Ошибка при загрузке последних операций:', error);
+      recentTransactionsTable.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-3 text-danger">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            Ошибка при загрузке данных
+          </td>
+        </tr>
+      `;
+    });
+}
+
+// Загрузка данных при загрузке страницы
+window.addEventListener('DOMContentLoaded', () => {
+  <% if (user && (user.role === 'admin' || user.role === 'manager')) { %>
+    loadLowStockProducts();
+    loadRecentTransactions();
+  <% } %>
+});
+</script>
+
+<%- include('./partials/footer') %>

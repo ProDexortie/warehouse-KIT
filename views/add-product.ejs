@@ -1,0 +1,212 @@
+<%- include('./partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/inventory">Инвентарь</a></li>
+        <li class="breadcrumb-item active">Добавление товара</li>
+      </ol>
+    </nav>
+    
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0"><i class="fas fa-plus-circle text-primary me-2"></i> Добавление товара</h5>
+      </div>
+      
+      <div class="card-body">
+        <% if (error) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        <% } %>
+        
+        <form method="POST" action="/inventory/add">
+          <div class="row mb-4">
+            <div class="col-md-12 mb-3">
+              <h6 class="text-primary">Основная информация</h6>
+              <hr>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="barcode" class="form-label">Штрих-код *</label>
+              <div class="input-group">
+                <input type="text" class="form-control" id="barcode" name="barcode" required value="<%= locals.formData ? formData.barcode : '' %>">
+                <button class="btn btn-outline-secondary" type="button" id="generateBarcodeBtn">
+                  <i class="fas fa-random me-1"></i> Сгенерировать
+                </button>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="name" class="form-label">Название товара *</label>
+              <input type="text" class="form-control" id="name" name="name" required value="<%= locals.formData ? formData.name : '' %>">
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="category" class="form-label">Категория *</label>
+              <input type="text" class="form-control" id="category" name="category" required list="categoriesList" value="<%= locals.formData ? formData.category : '' %>">
+              <datalist id="categoriesList">
+                <option value="Электроника">
+                <option value="Одежда">
+                <option value="Продукты питания">
+                <option value="Бытовая техника">
+                <option value="Мебель">
+                <option value="Инструменты">
+                <option value="Канцтовары">
+              </datalist>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="supplier" class="form-label">Поставщик</label>
+              <input type="text" class="form-control" id="supplier" name="supplier" value="<%= locals.formData ? formData.supplier : '' %>">
+            </div>
+            
+            <div class="col-md-12 mb-3">
+              <label for="description" class="form-label">Описание</label>
+              <textarea class="form-control" id="description" name="description" rows="3"><%= locals.formData ? formData.description : '' %></textarea>
+            </div>
+            
+            <div class="col-md-12 mb-3">
+              <h6 class="text-primary">Цены и запасы</h6>
+              <hr>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="price" class="form-label">Цена продажи (₽) *</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="price" name="price" step="0.01" required value="<%= locals.formData ? formData.price : '0.00' %>">
+                <span class="input-group-text">₽</span>
+              </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="cost" class="form-label">Себестоимость (₽) *</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="cost" name="cost" step="0.01" required value="<%= locals.formData ? formData.cost : '0.00' %>">
+                <span class="input-group-text">₽</span>
+              </div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="profit" class="form-label">Прибыль (₽)</label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="profit" step="0.01" disabled value="0.00">
+                <span class="input-group-text">₽</span>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="stockQuantity" class="form-label">Начальное количество *</label>
+              <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" min="0" required value="<%= locals.formData ? formData.stockQuantity : '0' %>">
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="minStockLevel" class="form-label">Минимальный запас *</label>
+              <input type="number" class="form-control" id="minStockLevel" name="minStockLevel" min="0" required value="<%= locals.formData ? formData.minStockLevel : '5' %>">
+            </div>
+            
+            <div class="col-md-12 mb-3">
+              <h6 class="text-primary">Расположение на складе</h6>
+              <hr>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="zone" class="form-label">Зона *</label>
+              <input type="text" class="form-control" id="zone" name="zone" maxlength="1" required value="<%= locals.formData ? formData.zone : 'A' %>">
+              <div class="form-text">Обозначение зоны склада (например, A, B, C)</div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="rack" class="form-label">Стеллаж *</label>
+              <input type="text" class="form-control" id="rack" name="rack" maxlength="2" required value="<%= locals.formData ? formData.rack : '01' %>">
+              <div class="form-text">Номер стеллажа (например, 01, 02)</div>
+            </div>
+            
+            <div class="col-md-4 mb-3">
+              <label for="shelf" class="form-label">Полка *</label>
+              <input type="text" class="form-control" id="shelf" name="shelf" maxlength="2" required value="<%= locals.formData ? formData.shelf : '01' %>">
+              <div class="form-text">Номер полки (например, 01, 02)</div>
+            </div>
+            
+            <div class="col-md-12 mb-3">
+              <h6 class="text-primary">Дополнительная информация</h6>
+              <hr>
+            </div>
+            
+            <div class="col-md-12 mb-3">
+              <label for="imageUrl" class="form-label">URL изображения</label>
+              <input type="url" class="form-control" id="imageUrl" name="imageUrl" value="<%= locals.formData ? formData.imageUrl : '' %>">
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between">
+            <a href="/inventory" class="btn btn-secondary">
+              <i class="fas fa-arrow-left me-1"></i> Отмена
+            </a>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save me-1"></i> Сохранить
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Генерация штрих-кода
+    const generateBarcodeBtn = document.getElementById('generateBarcodeBtn');
+    const barcodeInput = document.getElementById('barcode');
+    
+    generateBarcodeBtn.addEventListener('click', function() {
+      // Генерация 13-значного EAN-13 штрих-кода
+      const randomPart = Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0');
+      
+      // Расчет контрольной цифры
+      let sum = 0;
+      for (let i = 0; i < 12; i++) {
+        sum += parseInt(randomPart[i]) * (i % 2 === 0 ? 1 : 3);
+      }
+      const checkDigit = (10 - (sum % 10)) % 10;
+      
+      barcodeInput.value = randomPart + checkDigit;
+    });
+    
+    // Расчет прибыли при изменении цены или себестоимости
+    const priceInput = document.getElementById('price');
+    const costInput = document.getElementById('cost');
+    const profitInput = document.getElementById('profit');
+    
+    function calculateProfit() {
+      const price = parseFloat(priceInput.value) || 0;
+      const cost = parseFloat(costInput.value) || 0;
+      const profit = price - cost;
+      
+      profitInput.value = profit.toFixed(2);
+      
+      // Изменение цвета поля прибыли в зависимости от значения
+      if (profit <= 0) {
+        profitInput.classList.remove('bg-success', 'bg-light', 'text-white');
+        profitInput.classList.add('bg-danger', 'text-white');
+      } else if (profit > 0 && profit < cost * 0.2) {
+        profitInput.classList.remove('bg-danger', 'bg-success', 'text-white');
+        profitInput.classList.add('bg-light');
+      } else {
+        profitInput.classList.remove('bg-danger', 'bg-light');
+        profitInput.classList.add('bg-success', 'text-white');
+      }
+    }
+    
+    priceInput.addEventListener('input', calculateProfit);
+    costInput.addEventListener('input', calculateProfit);
+    
+    // Расчет прибыли при загрузке страницы
+    calculateProfit();
+  });
+</script>
+
+<%- include('./partials/footer') %>

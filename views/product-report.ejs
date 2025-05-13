@@ -1,0 +1,180 @@
+<%- include('./partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/reports">Отчеты</a></li>
+        <li class="breadcrumb-item active">Отчет по товарам</li>
+      </ol>
+    </nav>
+    
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-boxes text-primary me-2"></i> Отчет по товарам</h5>
+          <a href="/reports/export/products<%= queryString %>" class="btn btn-success">
+            <i class="fas fa-file-csv me-1"></i> Экспорт CSV
+          </a>
+        </div>
+      </div>
+      
+      <div class="card-body">
+        <div class="row mb-4">
+          <div class="col-md-12">
+            <form method="GET" action="/reports/products" class="row g-2">
+              <div class="col-md-3">
+                <select class="form-select" name="category">
+                  <option value="all" <%= selectedCategory === 'all' ? 'selected' : '' %>>Все категории</option>
+                  <% categories.forEach(category => { %>
+                    <option value="<%= category %>" <%= selectedCategory === category ? 'selected' : '' %>><%= category %></option>
+                  <% }); %>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <select class="form-select" name="stockStatus">
+                  <option value="all" <%= stockStatus === 'all' ? 'selected' : '' %>>Все товары</option>
+                  <option value="low" <%= stockStatus === 'low' ? 'selected' : '' %>>Низкий запас</option>
+                  <option value="out" <%= stockStatus === 'out' ? 'selected' : '' %>>Нет в наличии</option>
+                  <option value="high" <%= stockStatus === 'high' ? 'selected' : '' %>>Высокий запас</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <select class="form-select" name="sort">
+                  <option value="name-asc" <%= sort === 'name-asc' ? 'selected' : '' %>>По названию (А-Я)</option>
+                  <option value="name-desc" <%= sort === 'name-desc' ? 'selected' : '' %>>По названию (Я-А)</option>
+                  <option value="stock-asc" <%= sort === 'stock-asc' ? 'selected' : '' %>>По кол-ву (мин-макс)</option>
+                  <option value="stock-desc" <%= sort === 'stock-desc' ? 'selected' : '' %>>По кол-ву (макс-мин)</option>
+                  <option value="value-asc" <%= sort === 'value-asc' ? 'selected' : '' %>>По цене (мин-макс)</option>
+                  <option value="value-desc" <%= sort === 'value-desc' ? 'selected' : '' %>>По цене (макс-мин)</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fas fa-filter me-1"></i> Применить фильтры
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+        
+        <div class="row mb-4">
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Всего товаров</h6>
+                <h4 class="fw-bold mb-0"><%= products.length %></h4>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Общее количество</h6>
+                <h4 class="fw-bold mb-0"><%= totalItems %></h4>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Общая себестоимость</h6>
+                <h4 class="fw-bold mb-0"><%= totalCost.toLocaleString('ru-RU') %> ₽</h4>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body text-center">
+                <h6 class="text-muted mb-2">Общая стоимость</h6>
+                <h4 class="fw-bold mb-0"><%= totalValue.toLocaleString('ru-RU') %> ₽</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <% if (products.length === 0) { %>
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Товары не найдены. Попробуйте изменить параметры фильтрации.
+          </div>
+        <% } else { %>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Штрих-код</th>
+                  <th>Наименование</th>
+                  <th>Категория</th>
+                  <th>Кол-во</th>
+                  <th>Мин. запас</th>
+                  <th>Себестоимость</th>
+                  <th>Цена продажи</th>
+                  <th>Общая стоимость</th>
+                  <th>Местоположение</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% products.forEach(product => { %>
+                  <tr>
+                    <td>
+                      <span class="badge bg-light text-dark border"><%= product.barcode %></span>
+                    </td>
+                    <td>
+                      <a href="/inventory/view/<%= product._id %>" class="text-decoration-none text-dark fw-bold">
+                        <%= product.name %>
+                      </a>
+                    </td>
+                    <td>
+                      <span class="badge bg-primary"><%= product.category %></span>
+                    </td>
+                    <td>
+                      <% if (product.stockQuantity <= product.minStockLevel && product.stockQuantity > 0) { %>
+                        <span class="badge bg-warning"><%= product.stockQuantity %></span>
+                      <% } else if (product.stockQuantity === 0) { %>
+                        <span class="badge bg-danger">0</span>
+                      <% } else { %>
+                        <span class="badge bg-success"><%= product.stockQuantity %></span>
+                      <% } %>
+                    </td>
+                    <td><%= product.minStockLevel %></td>
+                    <td><%= product.cost.toFixed(2) %> ₽</td>
+                    <td><%= product.price.toFixed(2) %> ₽</td>
+                    <td><%= (product.price * product.stockQuantity).toFixed(2) %> ₽</td>
+                    <td>
+                      <span class="badge bg-secondary">
+                        <%= product.location.zone %>-<%= product.location.rack %>-<%= product.location.shelf %>
+                      </span>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+              <tfoot class="table-light fw-bold">
+                <tr>
+                  <td colspan="3" class="text-end">Итого:</td>
+                  <td><%= totalItems %></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td><%= totalValue.toLocaleString('ru-RU') %> ₽</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+<%- include('./partials/footer') %>
