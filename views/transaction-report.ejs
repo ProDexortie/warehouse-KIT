@@ -212,7 +212,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     <% if (transactions.length > 0) { %>
       // Подготовка данных для графика
-      const transactions = <%= JSON.stringify(transactions) %>;
+      const transactions = <%- JSON.stringify(transactions) %>;
       
       // Группировка транзакций по датам
       const dateMap = new Map();
