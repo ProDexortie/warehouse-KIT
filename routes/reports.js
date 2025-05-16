@@ -105,6 +105,14 @@ router.get('/transactions', checkRole(['admin', 'manager']), async (req, res) =>
       .populate('product', 'name')
       .populate('performedBy', 'username fullName');
     
+    // Формирование строки запроса для экспорта
+    let queryString = '';
+    if (startDate) queryString += `&startDate=${startDate}`;
+    if (endDate) queryString += `&endDate=${endDate}`;
+    if (type && type !== 'all') queryString += `&type=${type}`;
+    if (search) queryString += `&search=${search}`;
+    queryString = queryString ? '?' + queryString.substring(1) : '';
+    
     res.render('transaction-report', {
       title: 'Отчет о транзакциях | Система управления складом',
       transactions,
@@ -112,6 +120,7 @@ router.get('/transactions', checkRole(['admin', 'manager']), async (req, res) =>
       endDate: endDate || '',
       type: type || 'all',
       search: search || '',
+      queryString, // Добавляем переменную queryString
       user: req.session.user
     });
   } catch (error) {
@@ -185,6 +194,13 @@ router.get('/products', checkRole(['admin', 'manager']), async (req, res) => {
       return sum + product.stockQuantity;
     }, 0);
     
+    // Формирование строки запроса для экспорта
+    let queryString = '';
+    if (category && category !== 'all') queryString += `&category=${category}`;
+    if (sort) queryString += `&sort=${sort}`;
+    if (stockStatus) queryString += `&stockStatus=${stockStatus}`;
+    queryString = queryString ? '?' + queryString.substring(1) : '';
+    
     res.render('product-report', {
       title: 'Отчет о товарах | Система управления складом',
       products,
@@ -195,6 +211,7 @@ router.get('/products', checkRole(['admin', 'manager']), async (req, res) => {
       totalValue,
       totalCost,
       totalItems,
+      queryString, // Добавляем переменную queryString
       user: req.session.user
     });
   } catch (error) {
@@ -206,7 +223,36 @@ router.get('/products', checkRole(['admin', 'manager']), async (req, res) => {
 // Экспорт отчета о товарах в CSV
 router.get('/export/products', checkRole(['admin', 'manager']), async (req, res) => {
   try {
-    const products = await Product.find().sort({ name: 1 });
+    // Получение параметров запроса для фильтрации
+    const { category, stockStatus } = req.query;
+    
+    // Построение запроса
+    let query = {};
+    
+    // Фильтрация по категории
+    if (category && category !== 'all') {
+      query.category = category;
+    }
+    
+    // Фильтрация по статусу запасов
+    if (stockStatus === 'low') {
+      query = {
+        ...query,
+        $expr: { $lte: ['$stockQuantity', '$minStockLevel'] }
+      };
+    } else if (stockStatus === 'out') {
+      query = {
+        ...query,
+        stockQuantity: 0
+      };
+    } else if (stockStatus === 'high') {
+      query = {
+        ...query,
+        $expr: { $gt: ['$stockQuantity', { $multiply: ['$minStockLevel', 2] }] }
+      };
+    }
+    
+    const products = await Product.find(query).sort({ name: 1 });
     
     // Заголовки столбцов
     let csv = 'Штрих-код,Название,Категория,Количество,Цена,Себестоимость,Общая стоимость,Местоположение\n';
@@ -219,18 +265,23 @@ router.get('/export/products', checkRole(['admin', 'manager']), async (req, res)
       csv += `"${product.barcode}","${product.name}","${product.category}",${product.stockQuantity},${product.price},${product.cost},${totalValue},"${location}"\n`;
     });
     
-    // Установка заголовков ответа для скачивания файла
-    res.setHeader('Content-Type', 'text/csv');
+    // Установка заголовков ответа для скачивания файла с указанием кодировки
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=products-report.csv');
     
-    res.send(csv);
+    // Добавление BOM (Byte Order Mark) для корректного отображения кириллицы в Excel
+    const BOM = '\uFEFF';
+    const csvWithBOM = BOM + csv;
+    
+    // Отправка данных с BOM для правильной работы с кириллицей
+    res.send(Buffer.from(csvWithBOM));
   } catch (error) {
     console.error(error);
     res.status(500).send('Ошибка сервера');
   }
 });
 
-// Экспорт отчета о транзакциях в CSV
+// Экспорт отчета о транзакциях в CSV - исправленный код
 router.get('/export/transactions', checkRole(['admin', 'manager']), async (req, res) => {
   try {
     // Получение параметров запроса
@@ -291,11 +342,16 @@ router.get('/export/transactions', checkRole(['admin', 'manager']), async (req, 
       csv += `"${datetime}","${transactionType}","${transaction.documentNumber}","${transaction.barcode}","${productName}",${transaction.quantity},"${fromLocation}","${toLocation}","${transaction.reason}","${userName}"\n`;
     });
     
-    // Установка заголовков ответа для скачивания файла
-    res.setHeader('Content-Type', 'text/csv');
+    // Установка заголовков ответа для скачивания файла с указанием кодировки
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=transactions-report.csv');
     
-    res.send(csv);
+    // Добавление BOM (Byte Order Mark) для корректного отображения кириллицы в Excel
+    const BOM = '\uFEFF';
+    const csvWithBOM = BOM + csv;
+    
+    // Отправка данных с BOM для правильной работы с кириллицей
+    res.send(Buffer.from(csvWithBOM));
   } catch (error) {
     console.error(error);
     res.status(500).send('Ошибка сервера');
